@@ -10,7 +10,7 @@
             margin: 0;
             padding: 0;
             font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-            background-color: #fff;
+            background-color: #f7f9fc;
             color: #111;
             line-height: 1.6;
         }
@@ -24,7 +24,7 @@
             gap: 2rem;
         }
         .card, .content {
-            background-color: #fff;
+            background-color: #ffffff;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 2rem;
@@ -67,10 +67,21 @@
             color: #0056b3;
         }
         footer {
-            text-align: center;
-            padding: 1rem;
-            background-color: #f5f5f5;
-            font-size: 0.85rem;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #e9edf3;
+            font-size: 0.8rem;
+            color: #777;
+        }
+        footer p { margin: 0; }
+        @media (max-width: 600px) {
+            footer { flex-direction: column; }
+            footer p { margin-bottom: 5px; text-align: center; }
         }
         @media (max-width: 768px) {
             .container { flex-direction: column; }
