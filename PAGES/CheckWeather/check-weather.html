@@ -206,6 +206,8 @@
         const onType = debounce(async ()=>{
             const q = cityInput.value.trim();
             selectedCity = null; // reset selection when typing
+            // If user is typing a new city (no selection), remove any previously-applied background
+            try{ clearBackground(); }catch(e){}
             if (q.length < 2){ clearSuggestions(); return; }
             hideError();
             const list = await fetchCities(q);
@@ -266,7 +268,10 @@
                 weatherInfo.classList.add('visible');
                 // Try to apply a location background image from local wiki data (non-blocking)
                 tryApplyCityImage(selectedCity).catch(()=>{/* swallow errors, don't affect weather UI */});
-            }catch(err){ showError(err.message || 'Unable to fetch weather data'); }
+            }catch(err){ showError(err.message || 'Unable to fetch weather data');
+                // On weather fetch error, ensure any previously-applied background is removed
+                try{ clearBackground(); }catch(e){}
+            }
             finally{ hideLoading(); searchBtn.disabled = false; }
         }
 
@@ -347,18 +352,39 @@
             return null;
         }
 
-        // Preload image and apply only when loaded (prevents broken bg). If load fails, do nothing.
+        // Preload image and apply only when loaded (prevents broken bg). If load fails, remove any applied background.
+        function clearBackground(){
+            const pageContent = document.querySelector('.page-content');
+            if (pageContent){
+                pageContent.style.backgroundImage = '';
+                pageContent.style.backgroundSize = '';
+                pageContent.style.backgroundPosition = '';
+                pageContent.style.backgroundRepeat = '';
+            } else {
+                document.body.style.backgroundImage = '';
+            }
+        }
+
         function applyBackgroundImageIfLoaded(url){
             if (!url) return;
             const img = new Image();
             img.onload = function(){
-                // apply as body background; keep sizing and positioning
-                document.body.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundPosition = 'center center';
-                document.body.style.backgroundRepeat = 'no-repeat';
+                // apply as .page-content background so header/footer remain unaffected
+                const pageContent = document.querySelector('.page-content');
+                if (pageContent){
+                    pageContent.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
+                    pageContent.style.backgroundSize = 'cover';
+                    pageContent.style.backgroundPosition = 'center center';
+                    pageContent.style.backgroundRepeat = 'no-repeat';
+                } else {
+                    // fallback to body if .page-content not found
+                    document.body.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center center';
+                    document.body.style.backgroundRepeat = 'no-repeat';
+                }
             };
-            img.onerror = function(){ /* do nothing on error */ };
+            img.onerror = function(){ clearBackground(); };
             // start loading
             img.src = url;
         }
