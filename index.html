@@ -36,6 +36,14 @@
             font-size: 1.05rem;
             color: #224c8e;
             letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .brand img {
+            height: 40px; /* approximate size for header logo */
+            width: auto;
+            display: block;
         }
         .nav-links {
             display: flex;
@@ -100,7 +108,7 @@
             flex-wrap: wrap;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            min-height: 90vh;
             padding: 2rem;
             gap: 2rem;
         }
@@ -209,7 +217,7 @@
 <body>
     <header class="top-nav">
         <div class="top-nav-inner">
-            <div class="brand">Raja Sekhar Medindrao</div>
+            <div class="brand"><img src="logo.png" alt="Site logo"></div>
             <nav class="nav-links" aria-label="Primary navigation">
                 <a href="#weather" class="nav-pill">Check Weather</a>
                 <a href="#games" class="nav-pill">Play Games</a>
