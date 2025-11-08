@@ -360,24 +360,30 @@
         // Find an entry for the city in parsed local wiki data. Supports single object, array, or mapping.
         function findEntryForCity(parsed, key1, key2){
             if (!parsed) return null;
-            // If parsed looks like a mapping of keys -> entry
-            if (typeof parsed === 'object' && !Array.isArray(parsed)){
-                // If the object itself appears to be a single summary (has 'title' or 'displaytitle')
-                if (parsed.title || parsed.titles || parsed.displaytitle) return parsed;
-                // Otherwise attempt to match by key names
+            // If parsed is an array, search items
+            if (Array.isArray(parsed)){
+                for (const item of parsed){
+                    const t = (item.title || item.displaytitle || (item.titles && item.titles.canonical) || '').toString();
+                    const nt = normalizeKey(t.replace(/<[^>]+>/g, ''));
+                    if (nt === key1 || nt === key2) return item;
+                }
+                return null;
+            }
+
+            // If parsed is an object, it might be either a single summary or a mapping of keys -> entries.
+            if (typeof parsed === 'object'){
+                // If it looks like a single summary, only return it when the title matches the requested city.
+                const titleCandidate = (parsed.title || parsed.displaytitle || (parsed.titles && parsed.titles.canonical) || '').toString();
+                const normalizedTitle = normalizeKey(titleCandidate.replace(/<[^>]+>/g, ''));
+                if (normalizedTitle && (normalizedTitle === key1 || normalizedTitle === key2)) return parsed;
+
+                // Otherwise, attempt to match keys in the object (treat as a mapping)
                 for (const k of Object.keys(parsed)){
                     const nk = normalizeKey(k);
                     if (nk === key1 || nk === key2){ return parsed[k]; }
                 }
             }
-            // If array, search items
-            if (Array.isArray(parsed)){
-                for (const item of parsed){
-                    const t = (item.title || item.displaytitle || item.titles && item.titles.canonical || '').toString();
-                    const nt = normalizeKey(t.replace(/<[^>]+>/g, ''));
-                    if (nt === key1 || nt === key2) return item;
-                }
-            }
+
             return null;
         }
 
