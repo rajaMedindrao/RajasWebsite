@@ -1,0 +1,25 @@
+<header class="top-nav">
+    <div class="top-nav-inner">
+        <div class="brand"><a href="https://rajamedindrao.github.io/RajasWebsite/" title="Go to homepage"><img src="logo.png" alt="Site logo"></a></div>
+        <nav class="nav-links" aria-label="Primary navigation">
+            <a href="#weather" class="nav-pill">Check Weather</a>
+            <a href="#games" class="nav-pill">Play Games</a>
+            <a href="#talk-with-ai" class="nav-pill">Talk with AI</a>
+            <a href="#timer" class="nav-pill">Timer / Stopwatch</a>
+        </nav>
+        <button class="nav-toggle" aria-label="Toggle navigation menu">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+<script>
+    (function() {
+        const toggle = document.querySelector('.nav-toggle');
+        const nav = document.querySelector('.nav-links');
+        if (!toggle || !nav) return;
+        toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('is-open');
+            toggle.classList.toggle('is-open', isOpen);
+        });
+    })();
+</script>
