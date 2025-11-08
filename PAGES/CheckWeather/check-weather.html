@@ -265,9 +265,12 @@
                 document.getElementById('observedAt').textContent = observed ? new Date(observed).toLocaleString('en-US', { timeZone: tz || undefined }) : '';
                 document.getElementById('tz').textContent = tz || '-';
                 document.getElementById('elevation').textContent = elev !== '' ? `${elev} m` : '-';
+                // Wait for the image/background process to complete (local lookup + optional live fetch + image load)
+                try{
+                    await tryApplyCityImage(selectedCity);
+                }catch(e){ /* swallow - tryApplyCityImage is tolerant */ }
+                // Now reveal the weather UI (even if the image failed)
                 weatherInfo.classList.add('visible');
-                // Try to apply a location background image from local wiki data (non-blocking)
-                tryApplyCityImage(selectedCity).catch(()=>{/* swallow errors, don't affect weather UI */});
             }catch(err){ showError(err.message || 'Unable to fetch weather data');
                 // On weather fetch error, ensure any previously-applied background is removed
                 try{ clearBackground(); }catch(e){}
@@ -294,8 +297,8 @@
             const key1 = normalizeKey(city.name);
             const key2 = normalizeKey(`${city.name}${city.country ? ', ' + city.country : ''}`);
             // If cached, apply immediately
-            if (wikiImageCache.has(key1)) { applyBackgroundImageIfLoaded(wikiImageCache.get(key1)); return; }
-            if (wikiImageCache.has(key2)) { applyBackgroundImageIfLoaded(wikiImageCache.get(key2)); return; }
+            if (wikiImageCache.has(key1)) { await applyBackgroundImageIfLoaded(wikiImageCache.get(key1)); return; }
+            if (wikiImageCache.has(key2)) { await applyBackgroundImageIfLoaded(wikiImageCache.get(key2)); return; }
 
             // Try local files first. Try the single response file, then a multi-entry JSON file.
             const localCandidates = ['./wikipediaResponse.html','./wiki_responses.json','../CheckWeather/wikipediaResponse.html'];
@@ -312,7 +315,7 @@
                     const entry = findEntryForCity(parsed, key1, key2);
                     if (entry){
                         const img = (entry.originalimage && entry.originalimage.source) ? entry.originalimage.source : (entry.thumbnail && entry.thumbnail.source) ? entry.thumbnail.source : null;
-                        if (img) { wikiImageCache.set(key1, img); wikiImageCache.set(key2, img); applyBackgroundImageIfLoaded(img); return; }
+                        if (img) { wikiImageCache.set(key1, img); wikiImageCache.set(key2, img); await applyBackgroundImageIfLoaded(img); return; }
                     }
                 }catch(e){ /* ignore and continue */ }
             }
@@ -323,7 +326,7 @@
                 if (liveRes.ok){
                     const liveJson = await liveRes.json();
                     const img = (liveJson.originalimage && liveJson.originalimage.source) ? liveJson.originalimage.source : (liveJson.thumbnail && liveJson.thumbnail.source) ? liveJson.thumbnail.source : null;
-                    if (img){ wikiImageCache.set(key1, img); wikiImageCache.set(key2, img); applyBackgroundImageIfLoaded(img); return; }
+                    if (img){ wikiImageCache.set(key1, img); wikiImageCache.set(key2, img); await applyBackgroundImageIfLoaded(img); return; }
                 }
             }catch(e){ /* ignore live fallback errors */ }
         }
@@ -365,28 +368,40 @@
             }
         }
 
+        // Returns a Promise that resolves when the image loads or rejects on error.
         function applyBackgroundImageIfLoaded(url){
-            if (!url) return;
-            const img = new Image();
-            img.onload = function(){
-                // apply as .page-content background so header/footer remain unaffected
-                const pageContent = document.querySelector('.page-content');
-                if (pageContent){
-                    pageContent.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
-                    pageContent.style.backgroundSize = 'cover';
-                    pageContent.style.backgroundPosition = 'center center';
-                    pageContent.style.backgroundRepeat = 'no-repeat';
-                } else {
-                    // fallback to body if .page-content not found
-                    document.body.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
-                    document.body.style.backgroundSize = 'cover';
-                    document.body.style.backgroundPosition = 'center center';
-                    document.body.style.backgroundRepeat = 'no-repeat';
-                }
-            };
-            img.onerror = function(){ clearBackground(); };
-            // start loading
-            img.src = url;
+            return new Promise((resolve) => {
+                if (!url) return resolve();
+                const img = new Image();
+                let settled = false;
+                img.onload = function(){
+                    try{
+                        // apply as .page-content background so header/footer remain unaffected
+                        const pageContent = document.querySelector('.page-content');
+                        if (pageContent){
+                            pageContent.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
+                            pageContent.style.backgroundSize = 'cover';
+                            pageContent.style.backgroundPosition = 'center center';
+                            pageContent.style.backgroundRepeat = 'no-repeat';
+                        } else {
+                            // fallback to body if .page-content not found
+                            document.body.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
+                            document.body.style.backgroundSize = 'cover';
+                            document.body.style.backgroundPosition = 'center center';
+                            document.body.style.backgroundRepeat = 'no-repeat';
+                        }
+                    }catch(e){ /* ignore */ }
+                    if (!settled){ settled = true; resolve(); }
+                };
+                img.onerror = function(){
+                    try{ clearBackground(); }catch(e){}
+                    if (!settled){ settled = true; resolve(); }
+                };
+                // start loading
+                img.src = url;
+                // Safety: resolve after a timeout in case onload/onerror never fire (network weirdness)
+                setTimeout(()=>{ if (!settled){ settled = true; resolve(); } }, 10000);
+            });
         }
 
     })();
