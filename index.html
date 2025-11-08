@@ -5,27 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raja Sekhar Medindrao</title>
     <link rel="stylesheet" href="styles/style.css">
-    <script>
-        // Function to load HTML components
-        async function loadComponent(elementId, componentPath) {
-            try {
-                const response = await fetch(componentPath);
-                const html = await response.text();
-                document.getElementById(elementId).innerHTML = html;
-            } catch (error) {
-                console.error(`Error loading ${componentPath}:`, error);
-            }
-        }
-
-        // Load components when the page loads
-        window.addEventListener('load', () => {
-            loadComponent('header', 'components/header.html');
-            loadComponent('footer', 'components/footer.html');
-        });
-    </script>
+    <!-- Header/footer inlined from components to keep pages static -->
 </head>
 <body>
-    <div id="header"></div>
+    <header class="top-nav">
+        <div class="top-nav-inner">
+            <div class="brand"><a href="https://rajamedindrao.github.io/RajasWebsite/" title="Go to homepage"><img src="logo.png" alt="Site logo"></a></div>
+            <nav class="nav-links" aria-label="Primary navigation">
+                <a href="PAGES/CheckWeather/check-weather.html" class="nav-pill">Check Weather</a>
+                <a href="PAGES/PlayGames/play-games.html" class="nav-pill">Play Games</a>
+                <a href="PAGES/TalkWithAI/talk-with-ai.html" class="nav-pill">Talk with AI</a>
+                <a href="PAGES/TimerStopWatch/timer-stopwatch.html" class="nav-pill">Timer / Stopwatch</a>
+            </nav>
+            <button class="nav-toggle" aria-label="Toggle navigation menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+    <script>
+        (function() {
+            const toggle = document.querySelector('.nav-toggle');
+            const nav = document.querySelector('.nav-links');
+            if (!toggle || !nav) return;
+            toggle.addEventListener('click', () => {
+                const isOpen = nav.classList.toggle('is-open');
+                toggle.classList.toggle('is-open', isOpen);
+            });
+        })();
+    </script>
     <main class="container">
         <section class="card">
             <div class="profile">
@@ -53,6 +60,10 @@
             </div>
         </section>
     </main>
-    <div id="footer"></div>
+    <footer>
+        <p>&copy; 2025 Raja Sekhar Medindrao. All rights reserved.</p>
+        <p>Licensed under Apache 2.0.</p>
+        <p>Developed by Codex + ChatGPT.</p>
+    </footer>
 </body>
 </html>
