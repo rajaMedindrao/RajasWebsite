@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Check</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f7f9fc, #e8f1ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(34, 76, 142, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #224c8e;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.75rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e1e8f5;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #224c8e;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: #224c8e;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1a3b6d;
+        }
+
+        button:disabled {
+            background: #ccd4e2;
+            cursor: not-allowed;
+        }
+
+        .weather-info {
+            display: none;
+            background: #f7f9fc;
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+        }
+
+        .weather-info.visible {
+            display: block;
+        }
+
+        .city-name {
+            font-size: 1.5rem;
+            color: #224c8e;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .weather-item {
+            padding: 1rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(34, 76, 142, 0.05);
+        }
+
+        .weather-item .label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .weather-item .value {
+            color: #224c8e;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .error-message {
+            display: none;
+            color: #dc3545;
+            text-align: center;
+            padding: 1rem;
+            background: #fdf0f1;
+            border-radius: 12px;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Check</h1>
+        <div class="search-box">
+            <input type="text" id="cityInput" placeholder="Enter city name..." aria-label="City name">
+            <button id="searchBtn">Search</button>
+        </div>
+        <div id="errorMsg" class="error-message"></div>
+        <div id="weatherInfo" class="weather-info">
+            <div id="cityName" class="city-name"></div>
+            <div class="weather-details">
+                <div class="weather-item">
+                    <div class="label">Temperature</div>
+                    <div id="temperature" class="value"></div>
+                </div>
+                <div class="weather-item">
+                    <div class="label">Condition</div>
+                    <div id="condition" class="value"></div>
+                </div>
+                <div class="weather-item">
+                    <div class="label">Wind Speed</div>
+                    <div id="windSpeed" class="value"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const cityInput = document.getElementById('cityInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const weatherInfo = document.getElementById('weatherInfo');
+        const cityNameEl = document.getElementById('cityName');
+        const temperatureEl = document.getElementById('temperature');
+        const conditionEl = document.getElementById('condition');
+        const windSpeedEl = document.getElementById('windSpeed');
+
+        // Weather code mapping
+        const weatherCodes = {
+            0: 'Clear sky',
+            1: 'Mainly clear',
+            2: 'Partly cloudy',
+            3: 'Overcast',
+            45: 'Foggy',
+            48: 'Depositing rime fog',
+            51: 'Light drizzle',
+            53: 'Moderate drizzle',
+            55: 'Dense drizzle',
+            61: 'Slight rain',
+            63: 'Moderate rain',
+            65: 'Heavy rain',
+            71: 'Slight snow',
+            73: 'Moderate snow',
+            75: 'Heavy snow',
+            77: 'Snow grains',
+            80: 'Slight rain showers',
+            81: 'Moderate rain showers',
+            82: 'Violent rain showers',
+            85: 'Slight snow showers',
+            86: 'Heavy snow showers',
+            95: 'Thunderstorm',
+            96: 'Thunderstorm with slight hail',
+            99: 'Thunderstorm with heavy hail'
+        };
+
+        // Function to show error
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.classList.add('visible');
+            weatherInfo.classList.remove('visible');
+        }
+
+        // Function to hide error
+        function hideError() {
+            errorMsg.classList.remove('visible');
+        }
+
+        // Function to get weather description from code
+        function getWeatherDescription(code) {
+            return weatherCodes[code] || 'Unknown';
+        }
+
+        // Function to get coordinates for a city
+        async function getCoordinates(cityName) {
+            try {
+                const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}`);
+                const data = await response.json();
+
+                if (!data.results || data.results.length === 0) {
+                    throw new Error('City not found');
+                }
+
+                const { latitude, longitude } = data.results[0];
+                return { latitude, longitude };
+            } catch (error) {
+                throw new Error('Unable to find city coordinates');
+            }
+        }
+
+        // Function to get weather data
+        async function getWeather(latitude, longitude) {
+            try {
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+                const data = await response.json();
+
+                if (!data.current_weather) {
+                    throw new Error('Weather data not available');
+                }
+
+                return data.current_weather;
+            } catch (error) {
+                throw new Error('Unable to fetch weather data');
+            }
+        }
+
+        // Function to update UI with weather data
+        function updateWeatherUI(cityName, weatherData) {
+            cityNameEl.textContent = cityName;
+            temperatureEl.textContent = `${Math.round(weatherData.temperature)}°C`;
+            conditionEl.textContent = getWeatherDescription(weatherData.weathercode);
+            windSpeedEl.textContent = `${Math.round(weatherData.windspeed)} km/h`;
+            weatherInfo.classList.add('visible');
+        }
+
+        // Function to handle search
+        async function handleSearch() {
+            const cityName = cityInput.value.trim();
+            
+            if (!cityName) {
+                showError('Please enter a city name');
+                return;
+            }
+
+            searchBtn.disabled = true;
+            hideError();
+
+            try {
+                const coords = await getCoordinates(cityName);
+                const weatherData = await getWeather(coords.latitude, coords.longitude);
+                updateWeatherUI(cityName, weatherData);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                searchBtn.disabled = false;
+            }
+        }
+
+        // Event listeners
+        searchBtn.addEventListener('click', handleSearch);
+        cityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+
+        // Focus input on page load
+        cityInput.focus();
+    </script>
+</body>
+</html>
