@@ -1,4 +1,4 @@
-# Raj's Personal Website
+# Raja's Personal Website
 
 This repository contains a simple static site that can be hosted with GitHub Pages. It has a short introduction and a few ways to get in touch via email, LinkedIn, or phone.
 
