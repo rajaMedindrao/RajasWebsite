@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talk with AI</title>
+    <link rel="stylesheet" href="../../styles/style.css">
+</head>
+<body>
+    <!-- Inlined header (copied from CheckWeather) -->
+    <header class="top-nav">
+        <div class="top-nav-inner">
+            <div class="brand"><a href="https://rajamedindrao.github.io/RajasWebsite/" title="Go to homepage"><img src="../../logo.png" alt="Site logo"></a></div>
+            <nav class="nav-links" aria-label="Primary navigation">
+                <a href="../CheckWeather/check-weather.html" class="nav-pill">Check Weather</a>
+                <a href="../PlayGames/play-games.html" class="nav-pill">Play Games</a>
+                <a href="talk-with-ai.html" class="nav-pill">Talk with AI</a>
+                <a href="../TimerStopWatch/timer-stopwatch.html" class="nav-pill">Timer / Stopwatch</a>
+            </nav>
+            <button class="nav-toggle" aria-label="Toggle navigation menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+    <script>
+        (function() {
+            const toggle = document.querySelector('.nav-toggle');
+            const nav = document.querySelector('.nav-links');
+            if (!toggle || !nav) return;
+            toggle.addEventListener('click', () => {
+                const isOpen = nav.classList.toggle('is-open');
+                toggle.classList.toggle('is-open', isOpen);
+            });
+        })();
+    </script>
+
+    <!-- empty body per request -->
+
+    <!-- Inlined footer (copied from CheckWeather) -->
+    <footer>
+        <p>&copy; 2025 Raja Sekhar Medindrao. All rights reserved.</p>
+        <p>Licensed under Apache 2.0.</p>
+        <p>Developed by Codex + ChatGPT.</p>
+    </footer>
+</body>
+</html>
