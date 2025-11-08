@@ -283,6 +283,32 @@
         // initial focus
         cityInput.focus();
 
+        // Ensure .page-content fills the space between header and footer
+        function adjustPageContentHeight(){
+            try{
+                const header = document.querySelector('header.top-nav');
+                const footer = document.querySelector('footer');
+                const pageContent = document.querySelector('.page-content');
+                if (!pageContent) return;
+                const winH = window.innerHeight;
+                const headerH = header ? header.getBoundingClientRect().height : 0;
+                const footerH = footer ? footer.getBoundingClientRect().height : 0;
+                const available = Math.max(0, winH - headerH - footerH);
+                // set min-height so background covers the area; use px to be precise
+                pageContent.style.minHeight = available + 'px';
+                // also ensure pageContent uses flex layout to center contents vertically
+                pageContent.style.display = 'flex';
+                pageContent.style.alignItems = 'center';
+                pageContent.style.justifyContent = 'center';
+            }catch(e){ /* ignore measurement errors */ }
+        }
+        // Run on load and resize
+        window.addEventListener('load', adjustPageContentHeight);
+        window.addEventListener('resize', adjustPageContentHeight);
+        // In case header/footer sizes change after DOM mutations, run periodically for a short while
+        let _adjustInterval = setInterval(adjustPageContentHeight, 250);
+        setTimeout(()=>{ clearInterval(_adjustInterval); }, 3000);
+
         // --- Wikipedia image lookup and background apply ---
         // In-memory cache: normalized city key -> image URL
         const wikiImageCache = new Map();
