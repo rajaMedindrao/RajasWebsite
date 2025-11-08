@@ -264,6 +264,8 @@
                 document.getElementById('tz').textContent = tz || '-';
                 document.getElementById('elevation').textContent = elev !== '' ? `${elev} m` : '-';
                 weatherInfo.classList.add('visible');
+                // Try to apply a location background image from local wiki data (non-blocking)
+                tryApplyCityImage(selectedCity).catch(()=>{/* swallow errors, don't affect weather UI */});
             }catch(err){ showError(err.message || 'Unable to fetch weather data'); }
             finally{ hideLoading(); searchBtn.disabled = false; }
         }
@@ -272,6 +274,94 @@
 
         // initial focus
         cityInput.focus();
+
+        // --- Wikipedia image lookup and background apply ---
+        // In-memory cache: normalized city key -> image URL
+        const wikiImageCache = new Map();
+
+        // Normalize keys for lookups (lowercase, trim)
+        function normalizeKey(name){ return (name || '').toString().trim().toLowerCase(); }
+
+        // Try to find and apply an image for a selected city.
+        // This function is intentionally tolerant: any failure is swallowed so weather UI stays functional.
+        async function tryApplyCityImage(city){
+            if (!city || !city.name) return;
+            const key1 = normalizeKey(city.name);
+            const key2 = normalizeKey(`${city.name}${city.country ? ', ' + city.country : ''}`);
+            // If cached, apply immediately
+            if (wikiImageCache.has(key1)) { applyBackgroundImageIfLoaded(wikiImageCache.get(key1)); return; }
+            if (wikiImageCache.has(key2)) { applyBackgroundImageIfLoaded(wikiImageCache.get(key2)); return; }
+
+            // Try local files first. Try the single response file, then a multi-entry JSON file.
+            const localCandidates = ['./wikipediaResponse.html','./wiki_responses.json','../CheckWeather/wikipediaResponse.html'];
+            for (const path of localCandidates){
+                try{
+                    const res = await fetch(path, {cache: 'no-store'});
+                    if (!res.ok) continue;
+                    const txt = await res.text();
+                    let parsed = null;
+                    try{ parsed = JSON.parse(txt); }catch(e){
+                        // sometimes .html file may contain JSON only; if parse fails, skip
+                        continue;
+                    }
+                    const entry = findEntryForCity(parsed, key1, key2);
+                    if (entry){
+                        const img = (entry.originalimage && entry.originalimage.source) ? entry.originalimage.source : (entry.thumbnail && entry.thumbnail.source) ? entry.thumbnail.source : null;
+                        if (img) { wikiImageCache.set(key1, img); wikiImageCache.set(key2, img); applyBackgroundImageIfLoaded(img); return; }
+                    }
+                }catch(e){ /* ignore and continue */ }
+            }
+
+            // Optional live fallback: fetch from Wikipedia REST API (don't persist to disk)
+            try{
+                const liveRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(city.name)}`);
+                if (liveRes.ok){
+                    const liveJson = await liveRes.json();
+                    const img = (liveJson.originalimage && liveJson.originalimage.source) ? liveJson.originalimage.source : (liveJson.thumbnail && liveJson.thumbnail.source) ? liveJson.thumbnail.source : null;
+                    if (img){ wikiImageCache.set(key1, img); wikiImageCache.set(key2, img); applyBackgroundImageIfLoaded(img); return; }
+                }
+            }catch(e){ /* ignore live fallback errors */ }
+        }
+
+        // Find an entry for the city in parsed local wiki data. Supports single object, array, or mapping.
+        function findEntryForCity(parsed, key1, key2){
+            if (!parsed) return null;
+            // If parsed looks like a mapping of keys -> entry
+            if (typeof parsed === 'object' && !Array.isArray(parsed)){
+                // If the object itself appears to be a single summary (has 'title' or 'displaytitle')
+                if (parsed.title || parsed.titles || parsed.displaytitle) return parsed;
+                // Otherwise attempt to match by key names
+                for (const k of Object.keys(parsed)){
+                    const nk = normalizeKey(k);
+                    if (nk === key1 || nk === key2){ return parsed[k]; }
+                }
+            }
+            // If array, search items
+            if (Array.isArray(parsed)){
+                for (const item of parsed){
+                    const t = (item.title || item.displaytitle || item.titles && item.titles.canonical || '').toString();
+                    const nt = normalizeKey(t.replace(/<[^>]+>/g, ''));
+                    if (nt === key1 || nt === key2) return item;
+                }
+            }
+            return null;
+        }
+
+        // Preload image and apply only when loaded (prevents broken bg). If load fails, do nothing.
+        function applyBackgroundImageIfLoaded(url){
+            if (!url) return;
+            const img = new Image();
+            img.onload = function(){
+                // apply as body background; keep sizing and positioning
+                document.body.style.backgroundImage = `url('${url.replace(/'/g, "\\'")}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center center';
+                document.body.style.backgroundRepeat = 'no-repeat';
+            };
+            img.onerror = function(){ /* do nothing on error */ };
+            // start loading
+            img.src = url;
+        }
 
     })();
     </script>

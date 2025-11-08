@@ -9,6 +9,7 @@ body {
     background-color: #f7f9fc;
     color: #111;
     line-height: 1.6;
+    align-items: center;
 }
 
 header.top-nav {
