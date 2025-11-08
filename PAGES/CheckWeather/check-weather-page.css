@@ -1,23 +1,11 @@
 /* Check Weather page specific styles (renamed to avoid clash) */
 
-/* Page reset and layout (moved from inline <style> in check-weather.html) */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-}
+/* Page-specific layout (only unique rules kept here)
+   Note: global resets (box-sizing, body font, base background) live in styles/style.css
+   To avoid clashing with the site's `.container`, this page uses `.weather-container`.
+*/
 
-body {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #f7f9fc, #e8f1ff);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 1rem;
-}
-
-.container {
+.weather-container {
     background: rgba(255, 255, 255, 0.95);
     padding: 2rem;
     border-radius: 20px;
@@ -132,7 +120,7 @@ button:disabled {
 }
 
 @media (max-width: 480px) {
-    .container {
+    .weather-container {
         padding: 1.5rem;
     }
 
@@ -143,4 +131,20 @@ button:disabled {
     button {
         width: 100%;
     }
+}
+
+/* Page wrapper: keep header/footer untouched and center the content between them */
+.weather-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #f7f9fc, #e8f1ff);
+}
+
+.weather-page-content {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem 80px 1rem; /* bottom padding to avoid overlap with fixed footer */
 }
