@@ -1,0 +1,198 @@
+/* Play Games - Reflex / Accuracy game styles (scoped with .rg- prefix to avoid collisions) */
+:root {
+	--rg-primary: #224c8e; /* match site primary */
+	--rg-bg: #ffffff;
+	--rg-muted: #e6eefb;
+}
+
+.rg-game-card {
+	max-width: 90%;
+	width: 90%;
+	margin: 1rem auto; /* gap from header and footer */
+	background: var(--rg-bg);
+	border-radius: 12px;
+	box-shadow: 0 10px 30px rgba(34,76,142,0.06);
+	padding: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	/* Calculate height based on viewport minus header and footer */
+	height: calc(90vh - 140px); /* 140px accounts for header + footer + margins */
+}
+
+.rg-controls {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+	justify-content: space-between; /* spread stats and controls */
+	margin-bottom: 0.6rem;
+	width: 100%;
+}
+
+.rg-game-controls {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+
+.rg-controls .rg-buttons {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.rg-difficulty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.rg-select {
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    border: 2px solid var(--rg-primary);
+    background: white;
+    color: var(--rg-primary);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.rg-select:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.rg-btn {
+	padding: 0.5rem 0.85rem;
+	border-radius: 10px;
+	border: none;
+	cursor: pointer;
+	font-weight: 600;
+	color: white;
+	background: var(--rg-primary);
+	box-shadow: 0 6px 14px rgba(34,76,142,0.08);
+}
+
+.rg-btn.secondary {
+	background: white;
+	color: var(--rg-primary);
+	border: 2px solid var(--rg-primary);
+}
+
+.rg-stats {
+	display:flex;
+	gap:1rem;
+	align-items:center;
+	color:#111;
+	font-weight:700;
+	background: rgba(255,255,255,0.9);
+	padding: 0.5rem 0.85rem;
+	border-radius: 999px;
+	box-shadow: 0 8px 20px rgba(34,76,142,0.06);
+}
+
+/* centered overlay inside play area to show stats in the center of the screen */
+.rg-stats-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none; /* allow clicks to pass through except on the stats element */
+}
+.rg-stats-overlay .rg-stats { pointer-events: auto; }
+
+.rg-play-area {
+	position: relative;
+	flex: 1;
+	width: 100%;
+	padding: 12px;
+	background: linear-gradient(180deg, #fbfdff 0%, #f3f7ff 100%);
+	border-radius: 10px;
+	border: 1px solid var(--rg-muted);
+	overflow: hidden;
+	margin-bottom: 0.5rem;
+}
+
+.rg-play-inner {
+	position: absolute;
+	inset: 12px;
+}
+
+
+.rg-dot {
+	position: absolute;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	/* subtle 3D + gloss */
+	background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.12) 8%, rgba(34,76,142,0.18) 40%, var(--rg-primary) 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 14px 30px rgba(34,76,142,0.18), inset 0 3px 8px rgba(255,255,255,0.06);
+	touch-action: manipulation;
+	transition: transform 140ms ease, opacity 220ms ease;
+	will-change: transform, opacity;
+}
+
+.rg-dot .rg-hit-target {
+	width: 70%;
+	height: 70%;
+	border-radius: 50%;
+	background: linear-gradient(180deg, #ffffff55, var(--rg-primary));
+	box-shadow: 0 4px 12px rgba(34,76,142,0.28);
+}
+
+/* pop effect applied when dot is hit */
+.rg-dot.rg-pop {
+	transform: scale(0.28);
+	opacity: 0;
+}
+
+/* a very subtle idle pulse to make the dot feel alive */
+@keyframes rg-pulse {
+	0% { transform: scale(1); }
+	50% { transform: scale(1.035); }
+	100% { transform: scale(1); }
+}
+.rg-dot { animation: rg-pulse 2200ms ease-in-out infinite; }
+
+.rg-message {
+	text-align: center;
+	padding: 0.75rem 0.5rem;
+	color: #444;
+	font-weight: 600;
+}
+
+.rg-overlay {
+	position: absolute;
+	inset: 0;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	background: rgba(255,255,255,0.75);
+	backdrop-filter: blur(4px);
+	border-radius: 10px;
+}
+
+@media (max-width: 900px) {
+	.rg-controls {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.rg-game-controls {
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+}
+
+@media (max-width: 600px) {
+	.rg-dot { width: 44px; height: 44px; }
+	.rg-stats {
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+}
+
+

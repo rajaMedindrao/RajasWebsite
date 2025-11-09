@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Play Games</title>
     <link rel="stylesheet" href="../../styles/style.css">
+    <link rel="stylesheet" href="play-games.css">
 </head>
 <body>
     <!-- Inlined header (copied from CheckWeather) -->
@@ -34,13 +35,290 @@
         })();
     </script>
 
-    <!-- empty body per request -->
+    <main class="rg-game-card">
+        <div class="rg-controls">
+            <div class="rg-game-controls">
+                <div class="rg-buttons">
+                    <button id="rgStart" class="rg-btn">Start</button>
+                    <button id="rgPause" class="rg-btn secondary" disabled>Pause</button>
+                    <button id="rgReset" class="rg-btn secondary" disabled>Reset</button>
+                </div>
+                <div class="rg-difficulty">
+                    <label for="rgDifficulty">Difficulty:</label>
+                    <select id="rgDifficulty" class="rg-select">
+                        <option value="easy">Easy (3s)</option>
+                        <option value="medium">Medium (2s)</option>
+                        <option value="hard">Hard (1s)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="rg-stats">
+                <div>Score: <span id="rgScore">0</span></div>
+                <div>Lives: <span id="rgLives">3</span></div>
+                <div>Speed: <span id="rgSpeed">1.00x</span></div>
+            </div>
+        </div>
+
+        <div class="rg-play-area" id="rgPlayArea" aria-label="Reflex play area">
+            <div class="rg-play-inner" id="rgPlayInner"></div>
+            <div class="rg-message" id="rgMessage" aria-live="polite"></div>
+        </div>
+    </main>
+
+    <script>
+    (function(){
+    // Game config
+    const STARTING_LIVES = 3;
+    const DIFFICULTY_SETTINGS = {
+        easy: 3000,    // 3 seconds
+        medium: 2000,  // 2 seconds
+        hard: 1000     // 1 second
+    };
+    const MIN_LIFETIME = 500; // cap so it doesn't become impossible
+    const SPEED_DECAY = 0.93; // multiply lifetime by this after each successful hit (reduces lifetime)
+    const BETWEEN_DELAY = 260; // ms between dots
+
+        // State
+        let lives = STARTING_LIVES;
+        let score = 0;
+        let misses = 0;
+        let lifetime = DIFFICULTY_SETTINGS.easy; // default to easy
+        let running = false;
+        let paused = false;
+
+        // Active dot / timers
+        let activeDot = null;
+        let dotTimeoutId = null; // timeout for current dot disappearance
+        let nextSpawnTimeoutId = null;
+        let dotEndTime = null; // timestamp when dot is scheduled to disappear
+        let dotRemaining = null; // remaining ms used during pause/resume
+
+        // DOM
+        const startBtn = document.getElementById('rgStart');
+        const pauseBtn = document.getElementById('rgPause');
+        const resetBtn = document.getElementById('rgReset');
+        const scoreEl = document.getElementById('rgScore');
+        const livesEl = document.getElementById('rgLives');
+        const speedEl = document.getElementById('rgSpeed');
+        const playArea = document.getElementById('rgPlayArea');
+        const playInner = document.getElementById('rgPlayInner');
+        const messageEl = document.getElementById('rgMessage');
+        const difficultySelect = document.getElementById('rgDifficulty');
+
+        function randBetween(min, max){ return Math.random()*(max-min)+min; }
+
+        function updateStats(){
+            scoreEl.textContent = score;
+            livesEl.textContent = lives;
+            const baseLifetime = DIFFICULTY_SETTINGS[difficultySelect.value];
+            const mult = (baseLifetime / lifetime) || 1;
+            speedEl.textContent = mult.toFixed(2) + 'x';
+        }
+
+        function clearActiveDot(){
+            if (activeDot){
+                activeDot.remove();
+                activeDot = null;
+            }
+            if (dotTimeoutId){ clearTimeout(dotTimeoutId); dotTimeoutId = null; }
+            dotEndTime = null;
+            dotRemaining = null;
+        }
+
+        function scheduleNext(delay = BETWEEN_DELAY){
+            if (!running) return;
+            if (nextSpawnTimeoutId) clearTimeout(nextSpawnTimeoutId);
+            nextSpawnTimeoutId = setTimeout(()=>{ nextSpawnTimeoutId = null; spawnDot(); }, delay);
+        }
+
+        function spawnDot(){
+            // ensure only one
+            clearActiveDot();
+            const areaRect = playInner.getBoundingClientRect();
+            // dot size scales slightly with current lifetime; clamp for usability
+            const base = 64; // base visual size
+            const dotSize = Math.max(44, Math.min(88, Math.round(base * (lifetime / INITIAL_LIFETIME))));
+            const maxLeft = Math.max(0, areaRect.width - dotSize);
+            const maxTop = Math.max(0, areaRect.height - dotSize);
+            const left = randBetween(0, maxLeft);
+            const top = randBetween(0, maxTop);
+
+            const dot = document.createElement('div');
+            dot.className = 'rg-dot';
+            dot.style.width = dot.style.height = dotSize + 'px';
+            dot.style.left = left + 'px';
+            dot.style.top = top + 'px';
+            dot.innerHTML = '<div class="rg-hit-target" aria-hidden="true"></div>';
+            // use pointerdown for fast response (works for touch and mouse)
+            dot.addEventListener('pointerdown', onDotHit);
+            playInner.appendChild(dot);
+            activeDot = dot;
+
+            // schedule disappearance (miss)
+            const life = Math.max(MIN_LIFETIME, Math.round(lifetime));
+            dotEndTime = Date.now() + life;
+            dotRemaining = life;
+            dotTimeoutId = setTimeout(()=>{ dotTimeoutId = null; handleMiss(); }, life);
+        }
+
+        function onDotHit(e){
+            // only count if running and not paused
+            if (!running || paused) return;
+            e.preventDefault();
+            // prevent multi clicks
+            if (!activeDot) return;
+            const dot = activeDot;
+            // success
+            score += 1;
+            // speed up
+            lifetime = Math.max(MIN_LIFETIME, lifetime * SPEED_DECAY);
+            updateStats();
+            // visual pop before removing
+            try { dot.removeEventListener('pointerdown', onDotHit); } catch(e){}
+            dot.classList.add('rg-pop');
+            // allow a tiny beat for the pop animation then remove
+            setTimeout(()=>{
+                // clear current dot and schedule next
+                clearActiveDot();
+                scheduleNext(BETWEEN_DELAY);
+            }, 140);
+        }
+
+        function handleMiss(){
+            // if dot expired while running
+            if (!running) return;
+            lives -= 1;
+            misses += 1;
+            updateStats();
+            clearActiveDot();
+            if (lives <= 0){
+                endGame();
+            } else {
+                messageEl.textContent = `${lives} ${lives === 1 ? 'life' : 'lives'} remaining!`;
+                setTimeout(() => {
+                    if (running && !paused) messageEl.textContent = '';
+                }, 1000);
+                scheduleNext(BETWEEN_DELAY);
+            }
+        }
+
+        function endGame(){
+            running = false;
+            paused = false;
+            clearActiveDot();
+            if (nextSpawnTimeoutId){ clearTimeout(nextSpawnTimeoutId); nextSpawnTimeoutId = null; }
+            messageEl.innerHTML = `Game over — Final score: ${score}.`;
+            // disable pause/start
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resetBtn.disabled = false;
+        }
+
+        function startGame(){
+            if (running) return;
+            // initialize
+            const difficulty = difficultySelect.value;
+            lives = STARTING_LIVES;
+            score = 0;
+            misses = 0;
+            lifetime = DIFFICULTY_SETTINGS[difficulty];
+            running = true;
+            paused = false;
+            updateStats();
+            messageEl.textContent = '';
+            startBtn.disabled = true; // prevent double-start
+            pauseBtn.disabled = false;
+            pauseBtn.textContent = 'Pause';
+            resetBtn.disabled = false;
+            difficultySelect.disabled = true; // prevent changing difficulty during game
+            clearActiveDot();
+            scheduleNext(300);
+        }
+
+        function pauseGame(){
+            if (!running || paused) return;
+            paused = true;
+            // pause current dot timer
+            if (dotTimeoutId && dotEndTime){
+                dotRemaining = Math.max(0, dotEndTime - Date.now());
+                clearTimeout(dotTimeoutId); dotTimeoutId = null;
+            }
+            // pause next spawn
+            if (nextSpawnTimeoutId){ clearTimeout(nextSpawnTimeoutId); nextSpawnTimeoutId = null; }
+            pauseBtn.textContent = 'Resume';
+            messageEl.textContent = 'Paused';
+        }
+
+        function resumeGame(){
+            if (!running || !paused) return;
+            paused = false;
+            // resume current dot
+            if (activeDot && dotRemaining != null){
+                dotEndTime = Date.now() + dotRemaining;
+                dotTimeoutId = setTimeout(()=>{ dotTimeoutId = null; handleMiss(); }, dotRemaining);
+            } else if (!activeDot){
+                // spawn a fresh one immediately
+                spawnDot();
+            }
+            pauseBtn.textContent = 'Pause';
+            messageEl.textContent = '';
+        }
+
+        function resetGame(){
+            running = false;
+            paused = false;
+            lives = STARTING_LIVES;
+            score = 0;
+            misses = 0;
+            lifetime = DIFFICULTY_SETTINGS[difficultySelect.value];
+            if (dotTimeoutId){ clearTimeout(dotTimeoutId); dotTimeoutId = null; }
+            if (nextSpawnTimeoutId){ clearTimeout(nextSpawnTimeoutId); nextSpawnTimeoutId = null; }
+            clearActiveDot();
+            updateStats();
+            messageEl.textContent = '';
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = 'Pause';
+            resetBtn.disabled = true;
+            difficultySelect.disabled = false; // re-enable difficulty selection
+        }
+
+        // Button wiring
+        startBtn.addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', ()=>{ if (!paused) pauseGame(); else resumeGame(); });
+        resetBtn.addEventListener('click', resetGame);
+
+        // Accessibility & resizing: when the play area resizes, ensure no offscreen dots
+        window.addEventListener('resize', ()=>{
+            if (activeDot){ // reposition active dot if it fell outside
+                const areaRect = playInner.getBoundingClientRect();
+                const dotRect = activeDot.getBoundingClientRect();
+                const relLeft = parseFloat(activeDot.style.left) || 0;
+                const relTop = parseFloat(activeDot.style.top) || 0;
+                const dotSize = activeDot.offsetWidth;
+                const maxLeft = Math.max(0, areaRect.width - dotSize);
+                const maxTop = Math.max(0, areaRect.height - dotSize);
+                activeDot.style.left = Math.min(relLeft, maxLeft) + 'px';
+                activeDot.style.top = Math.min(relTop, maxTop) + 'px';
+            }
+        });
+
+        // Prevent scrolling on touch during fast play
+        playArea.addEventListener('touchmove', (e)=>{ if (running) e.preventDefault(); }, { passive: false });
+
+        // Ensure reset on page unload
+        window.addEventListener('beforeunload', ()=>{ resetGame(); });
+
+        // initialize UI state
+        resetGame();
+    })();
+    </script>
 
     <!-- Inlined footer (copied from CheckWeather) -->
     <footer>
         <p>&copy; 2025 Raja Sekhar Medindrao. All rights reserved.</p>
         <p>Licensed under Apache 2.0.</p>
-        <p>Developed by Codex + ChatGPT.</p>
+        <p>Developed with AI + Coffee.</p>
     </footer>
 </body>
 </html>

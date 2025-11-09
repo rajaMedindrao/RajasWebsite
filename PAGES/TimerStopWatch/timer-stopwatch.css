@@ -1,0 +1,147 @@
+/* Timer page specific styles */
+:root {
+    --primary: #224c8e;  /* match site theme */
+    --muted: #e18f9f;
+    --light: #f7f9fc;
+}
+
+.page-content {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem 80px;
+}
+
+.timer-container {
+    background: rgba(255,255,255,0.98);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(34,76,142,0.08);
+    width: 100%;
+    max-width: 520px;
+}
+
+.timer-title {
+    color: var(--primary);
+    margin: 0 0 1.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.timer-display {
+    font-size: 3.5rem;
+    font-weight: 700;
+    font-family: monospace;
+    text-align: center;
+    color: var(--primary);
+    margin: 1.5rem 0;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.timer-inputs {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.time-input {
+    width: 80px;
+    text-align: center;
+    padding: 0.75rem;
+    border: 2px solid var(--muted);
+    border-radius: 12px;
+    font-size: 1.1rem;
+    background: white;
+}
+
+.time-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.time-input:disabled {
+    background: #f5f7fa;
+    cursor: not-allowed;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.timer-btn {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-width: 100px;
+}
+
+.timer-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34,76,142,0.15);
+}
+
+.timer-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.timer-message {
+    text-align: center;
+    color: #666;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    min-height: 1.5rem; /* prevent layout shift */
+}
+
+@media (max-width: 480px) {
+    .timer-container {
+        padding: 1rem;
+    }
+    .timer-display {
+        font-size: 2.5rem;
+    }
+    .timer-inputs {
+        flex-direction: column;
+        align-items: center;
+    }
+    .timer-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .timer-btn {
+        width: 100%;
+    }
+}
