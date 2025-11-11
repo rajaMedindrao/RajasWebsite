@@ -6,8 +6,11 @@
     <title>Play Games</title>
     <link rel="stylesheet" href="../../styles/style.css">
     <link rel="stylesheet" href="play-games.css">
+    <link rel="stylesheet" href="../../CometAnimation/comet-animation.css">
+    <link id="comet-image-preload" rel="preload" as="image" href="../../CometAnimation/Comet.png">
 </head>
 <body>
+    <img id="comet-image-src" src="../../CometAnimation/Comet.png" alt="" hidden>
     <!-- Inlined header (copied from CheckWeather) -->
     <header class="top-nav">
         <div class="top-nav-inner">
@@ -137,7 +140,8 @@
             const areaRect = playInner.getBoundingClientRect();
             // dot size scales slightly with current lifetime; clamp for usability
             const base = 64; // base visual size
-            const dotSize = Math.max(44, Math.min(88, Math.round(base * (lifetime / INITIAL_LIFETIME))));
+            const baseLifetime = DIFFICULTY_SETTINGS[difficultySelect.value] || 3000;
+            const dotSize = Math.max(44, Math.min(88, Math.round(base * (lifetime / baseLifetime))));
             const maxLeft = Math.max(0, areaRect.width - dotSize);
             const maxTop = Math.max(0, areaRect.height - dotSize);
             const left = randBetween(0, maxLeft);
@@ -320,5 +324,6 @@
         <p>Licensed under Apache 2.0.</p>
         <p>Developed with AI + Coffee.</p>
     </footer>
+    <script src="../../CometAnimation/comet-animation.js"></script>
 </body>
 </html>

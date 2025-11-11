@@ -9,13 +9,17 @@ body {
     background-color: #f7f9fc;
     color: #111;
     line-height: 1.6;
-    align-items: center;
+    /* Make footer sit at bottom when content is short */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    align-items: stretch;
 }
 
 header.top-nav {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    /* allow header to scroll with page (not sticky) */
+    position: relative; /* create stacking context for dropdown */
+    z-index: 3000;      /* ensure menu overlays page content (e.g., Play Games area) */
     background: rgba(247, 249, 252, 0.9);
     backdrop-filter: blur(6px);
     border-bottom: 1px solid rgba(34, 91, 180, 0.08);
@@ -177,8 +181,8 @@ header.top-nav {
 }
 
 footer {
-    position: fixed;
-    bottom: 0;
+    /* allow footer to be part of normal flow (not fixed) and sit at bottom */
+    margin-top: auto;
     width: 100%;
     display: flex;
     justify-content: space-evenly;
@@ -224,6 +228,8 @@ footer p {
         pointer-events: none;
         transition: opacity 0.25s ease, transform 0.25s ease;
         min-width: 280px;
+        /* Ensure mobile menu overlays page content and suggestion dropdowns */
+        z-index: 2000;
     }
 
     .nav-links.is-open {

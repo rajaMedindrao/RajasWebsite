@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Talk with AI</title>
     <link rel="stylesheet" href="../../styles/style.css">
+    <link rel="stylesheet" href="../../CometAnimation/comet-animation.css">
+    <link id="comet-image-preload" rel="preload" as="image" href="../../CometAnimation/Comet.png">
 </head>
 <body>
+    <img id="comet-image-src" src="../../CometAnimation/Comet.png" alt="" hidden>
     <!-- Inlined header (copied from CheckWeather) -->
     <header class="top-nav">
         <div class="top-nav-inner">
@@ -42,5 +45,6 @@
         <p>Licensed under Apache 2.0.</p>
         <p>Developed with AI + Coffee.</p>
     </footer>
+    <script src="../../CometAnimation/comet-animation.js"></script>
 </body>
 </html>

@@ -1,0 +1,51 @@
+/* Comet Animation Styles */
+#comet-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.comet {
+    position: absolute;
+    width: 45px;
+    height: auto;
+    pointer-events: none;
+    opacity: 0;
+    transform-origin: 50% 50%;
+    /* Blue glow (reduced radius) */
+    filter: drop-shadow(0 0 5px rgba(80, 150, 255, 0.85))
+        drop-shadow(0 0 10px rgba(50, 120, 255, 0.7))
+        drop-shadow(0 0 15px rgba(30, 100, 255, 0.5));
+    animation: comet-fade 4s ease-in-out;
+}
+
+.comet img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Direction-specific transforms - removed, now handled dynamically */
+
+/* Fade in and out animation */
+@keyframes comet-fade {
+    0% {
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Movement animations are now applied inline via JavaScript for random directions */

@@ -15,8 +15,8 @@
 	padding: 0.75rem;
 	display: flex;
 	flex-direction: column;
-	/* Calculate height based on viewport minus header and footer */
-	height: calc(90vh - 140px); /* 140px accounts for header + footer + margins */
+	/* Fill the screen height up to just above the fixed footer */
+	height: calc(100vh - 150px);
 }
 
 .rg-controls {

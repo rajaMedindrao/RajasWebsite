@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raja Sekhar Medindrao</title>
     <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="CometAnimation/comet-animation.css">
+    <link id="comet-image-preload" rel="preload" as="image" href="CometAnimation/Comet.png">
     <!-- Header/footer inlined from components to keep pages static -->
 </head>
 <body>
+    <!-- Hidden comet image so JS can reliably read the resolved URL across pages -->
+    <img id="comet-image-src" src="CometAnimation/Comet.png" alt="" hidden>
     <header class="top-nav">
         <div class="top-nav-inner">
             <div class="brand"><a href="https://rajamedindrao.github.io/RajasWebsite/" title="Go to homepage"><img src="logo.png" alt="Site logo"></a></div>
@@ -31,6 +35,20 @@
                 const isOpen = nav.classList.toggle('is-open');
                 toggle.classList.toggle('is-open', isOpen);
             });
+        })();
+        // Dynamically ensure main content fills remaining viewport height (now that header/footer scroll normally)
+        (function(){
+            function adjust(){
+                const header = document.querySelector('header.top-nav');
+                const footer = document.querySelector('footer');
+                const main = document.querySelector('main.container');
+                if (!main) return;
+                const hH = header ? header.getBoundingClientRect().height : 0;
+                const fH = footer ? footer.getBoundingClientRect().height : 0;
+                main.style.minHeight = 'calc(100vh - ' + (hH + fH) + 'px)';
+            }
+            window.addEventListener('load', adjust);
+            window.addEventListener('resize', adjust);
         })();
     </script>
     <main class="container">
@@ -65,5 +83,6 @@
         <p>Licensed under Apache 2.0.</p>
         <p>Developed with AI + Coffee.</p>
     </footer>
+    <script src="CometAnimation/comet-animation.js"></script>
 </body>
 </html>
