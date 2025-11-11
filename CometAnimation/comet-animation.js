@@ -6,7 +6,8 @@
     'use strict';
 
     // Configuration
-    const COMET_DURATION = 4000; // milliseconds (matches CSS animation)
+    // Original duration 4000ms. Increase speed by 35% => new duration = 4000 / 1.35 ≈ 2963ms.
+    const COMET_DURATION = 2000; // milliseconds (35% faster)
     const DELAY_AFTER_EXIT = 3000; // 3 seconds after comet exits
     // Obtain comet image path from a hidden global <img id="comet-image-src"> element injected in each HTML page.
     // This avoids brittle relative path math across nested folders and works on case-sensitive hosts.
@@ -115,8 +116,8 @@
         // Calculate and apply rotation based on trajectory
         // Adding 0 degrees assumes the comet naturally points to the right
         // Adjust this offset if the image points in a different direction
-    const rotation = calculateRotation(start.x, start.y, end.x, end.y);
-    const rotationWithOffset = rotation + IMAGE_HEADING_OFFSET_DEG;
+        const rotation = calculateRotation(start.x, start.y, end.x, end.y);
+        const rotationWithOffset = rotation + IMAGE_HEADING_OFFSET_DEG;
         
         // Create inline keyframe animation for this specific trajectory
         const animationName = `comet-move-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -141,7 +142,9 @@
         document.head.appendChild(style);
         
         // Apply animation
-        comet.style.animation = `${animationName} 4s linear, comet-fade 4s ease-in-out`;
+        // Use dynamic duration for both movement and fade to stay in sync with faster speed
+        const durationSec = COMET_DURATION / 1000 + 's';
+        comet.style.animation = `${animationName} ${durationSec} linear, comet-fade ${durationSec} ease-in-out`;
 
         // Add to container
         container.appendChild(comet);
