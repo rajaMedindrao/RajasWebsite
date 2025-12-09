@@ -7,8 +7,9 @@
 
     // Configuration
     // Original duration 4000ms. Increase speed by 35% => new duration = 4000 / 1.35 ≈ 2963ms.
-    const COMET_DURATION = 2000; // milliseconds (35% faster)
-    const DELAY_AFTER_EXIT = 3000; // 3 seconds after comet exits
+    const COMET_DURATION = 3000; // milliseconds (animation duration)
+    const DELAY_AFTER_EXIT = 27000; // ~30 second interval between comets (3s duration + 27s gap)
+    const INITIAL_DELAY = 10000; // 10 seconds before first comet appears
     // Obtain comet image path from a hidden global <img id="comet-image-src"> element injected in each HTML page.
     // This avoids brittle relative path math across nested folders and works on case-sensitive hosts.
     const globalImageEl = typeof document !== 'undefined' ? document.getElementById('comet-image-src') : null;
@@ -174,12 +175,12 @@
         function spawnAndScheduleNext() {
             spawnComet(container);
             
-            // Schedule next comet after this one exits + delay
+            // Schedule next comet after this one exits + delay (30+ seconds total interval)
             setTimeout(spawnAndScheduleNext, COMET_DURATION + DELAY_AFTER_EXIT);
         }
 
-        // Start the sequence with first comet
-        spawnAndScheduleNext();
+        // Start the sequence with first comet after 10 second initial delay
+        setTimeout(spawnAndScheduleNext, INITIAL_DELAY);
     }
 
     // Start the animation
